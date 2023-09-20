@@ -700,18 +700,22 @@ fn readDataSection(
                 }
             },
             .string => {
-                // TODO: this entire block is hacky, inefficient and doesn't work on big-endian
+                if (offset_data.len < 4) return error.InvalidDataItem;
+                const sdata_start = std.mem.alignForward(usize, data.items.len, 4);
+                const sdata_start_padding = sdata_start - data.items.len;
+                std.mem.writeIntLittle(u32, offset_data[0..4], @intCast(sdata_start));
+                // offset_data cannot be used after this point, as data.items
+                // may be moved during resize
+
                 const utf8 = try allocator.alloc(u8, count);
                 defer allocator.free(utf8);
                 try reader.readNoEof(utf8);
                 const utf16_len = try std.unicode.calcUtf16LeLen(utf8);
-                try data.ensureUnusedCapacity(allocator, 4 + 2 * utf16_len);
-                const str_data_start = data.items.len;
-                data.items.len += 4 + 2 * utf16_len;
-                const str_data = data.items[str_data_start..];
-                mem.writeIntBig(u32, str_data[0..4], @intCast(utf16_len));
-                // TODO: this alignCast can sometimes fail
-                const str_contents: []u16 = @alignCast(mem.bytesAsSlice(u16, str_data[4..]));
+                try data.ensureUnusedCapacity(allocator, sdata_start_padding + 4 + 2 * utf16_len);
+                data.items.len += sdata_start_padding + 4 + 2 * utf16_len;
+                const sdata = data.items[sdata_start..];
+                mem.writeIntBig(u32, sdata[0..4], @intCast(utf16_len));
+                const str_contents: []u16 = @alignCast(mem.bytesAsSlice(u16, sdata[4..]));
                 _ = std.unicode.utf8ToUtf16Le(str_contents, utf8) catch unreachable;
             },
             .real => {
@@ -722,13 +726,19 @@ fn readDataSection(
                 }
             },
             .array => {
+                if (offset_data.len < 4) return error.InvalidDataItem;
+                const adata_start = std.mem.alignForward(usize, data.items.len, 4);
+                const adata_start_padding = adata_start - data.items.len;
+                std.mem.writeIntLittle(u32, offset_data[0..4], @intCast(adata_start));
+                // offset_data cannot be used after this point, as data.items
+                // may be moved during resize
+
                 const atype = try reader.readIntBig(u32);
                 if (atype >= type_descriptors.len) return error.InvalidDataItem;
                 const adesc = type_descriptors[atype];
                 const alen = try reader.readIntBig(u32);
-                try data.ensureUnusedCapacity(allocator, 4 + adesc.size * alen);
-                const adata_start = data.items.len;
-                data.items.len += 4 + adesc.size * alen;
+                try data.ensureUnusedCapacity(allocator, adata_start_padding + 4 + adesc.size * alen);
+                data.items.len += adata_start_padding + 4 + adesc.size * alen;
                 const adata = data.items[adata_start..];
                 mem.writeIntBig(u32, adata[0..4], alen);
                 @memset(adata[4..], 0);

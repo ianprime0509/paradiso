@@ -714,7 +714,7 @@ fn readDataSection(
                 try data.ensureUnusedCapacity(allocator, sdata_start_padding + 4 + 2 * utf16_len);
                 data.items.len += sdata_start_padding + 4 + 2 * utf16_len;
                 const sdata = data.items[sdata_start..];
-                mem.writeIntBig(u32, sdata[0..4], @intCast(utf16_len));
+                mem.writeIntLittle(u32, sdata[0..4], @intCast(utf16_len));
                 const str_contents: []u16 = @alignCast(mem.bytesAsSlice(u16, sdata[4..]));
                 _ = std.unicode.utf8ToUtf16Le(str_contents, utf8) catch unreachable;
             },
@@ -740,7 +740,7 @@ fn readDataSection(
                 try data.ensureUnusedCapacity(allocator, adata_start_padding + 4 + adesc.size * alen);
                 data.items.len += adata_start_padding + 4 + adesc.size * alen;
                 const adata = data.items[adata_start..];
-                mem.writeIntBig(u32, adata[0..4], alen);
+                mem.writeIntLittle(u32, adata[0..4], alen);
                 @memset(adata[4..], 0);
                 try array_descs.append(allocator, .{ .addr = addr, .item_size = adesc.size });
             },

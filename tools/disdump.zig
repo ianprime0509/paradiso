@@ -8,8 +8,10 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
+    var stdout_buf = std.io.bufferedWriter(std.io.getStdOut().writer());
+    const stdout = stdout_buf.writer();
     for (args[1..]) |arg| {
-        std.debug.print("{s}:\n\n", .{arg});
+        try stdout.print("{s}:\n\n", .{arg});
 
         var file = try std.fs.cwd().openFile(arg, .{});
         defer file.close();
@@ -17,41 +19,64 @@ pub fn main() !void {
         var object = try paradiso.dis.Object.read(allocator, br.reader());
         defer object.deinit(allocator);
 
-        std.debug.print("flags: {}\n", .{object.flags});
-        std.debug.print("stack extent: {}\n", .{object.stack_extent});
-        std.debug.print("entry pc: {}\n", .{object.entry_pc});
-        std.debug.print("entry type: {}\n", .{object.entry_type});
+        try stdout.print("flags: {}\n", .{object.flags});
+        try stdout.print("stack extent: {}\n", .{object.stack_extent});
+        try stdout.print("entry pc: {}\n", .{object.entry_pc});
+        try stdout.print("entry type: {}\n", .{object.entry_type});
 
-        std.debug.print("instructions:\n", .{});
+        try stdout.print("instructions:\n", .{});
         for (object.instructions, 0..) |instruction, i| {
-            std.debug.print("  {: >8}: {}\n", .{ i, instruction });
+            try stdout.print("  {: >8}: {}\n", .{ i, instruction });
         }
 
-        std.debug.print("type descriptors:\n", .{});
+        try stdout.print("type descriptors:\n", .{});
         for (object.type_descriptors, 0..) |type_descriptor, i| {
-            std.debug.print("  {: >8}: {}\n", .{ i, type_descriptor });
+            try stdout.print("  {: >8}: {}\n", .{ i, type_descriptor });
         }
 
-        std.debug.print("data: {}\n", .{std.fmt.fmtSliceHexUpper(object.data)});
+        try stdout.print("data:\n", .{});
+        var data_rows = std.mem.window(u8, object.data, 16, 16);
+        while (data_rows.next()) |row| {
+            const data_row_base = @intFromPtr(row.ptr) - @intFromPtr(object.data.ptr);
+            try stdout.print("  {X:0>8}: ", .{data_row_base});
+            var data_words = std.mem.window(u8, row, 2, 2);
+            while (data_words.next()) |word| {
+                try stdout.print("{X:0>2}", .{word[0]});
+                if (word.len > 1) {
+                    try stdout.print("{X:0>2} ", .{word[1]});
+                } else {
+                    try stdout.print("   ", .{});
+                }
+            }
+            for (0..((16 - row.len) / 2)) |_| {
+                try stdout.print("     ", .{});
+            }
 
-        std.debug.print("module name: {s}\n", .{object.module_name});
+            for (row) |b| {
+                try stdout.print("{c}", .{if (std.ascii.isPrint(b)) b else '.'});
+            }
+            try stdout.print("\n", .{});
+        }
 
-        std.debug.print("exports:\n", .{});
+        try stdout.print("module name: {s}\n", .{object.module_name});
+
+        try stdout.print("exports:\n", .{});
         for (object.exports, 0..) |@"export", i| {
-            std.debug.print("  {: >8}: {}\n", .{ i, @"export" });
+            try stdout.print("  {: >8}: {}\n", .{ i, @"export" });
         }
 
-        std.debug.print("imports:\n", .{});
+        try stdout.print("imports:\n", .{});
         for (object.imports, 0..) |mod_imports, i| {
-            std.debug.print("  {: >8}:\n", .{i});
+            try stdout.print("  {: >8}:\n", .{i});
             for (mod_imports, 0..) |import, j| {
-                std.debug.print("    {: >8}: {}\n", .{ j, import });
+                try stdout.print("    {: >8}: {}\n", .{ j, import });
             }
         }
 
-        std.debug.print("handlers:\n", .{});
+        try stdout.print("handlers:\n", .{});
         for (object.handlers, 0..) |handler, i| {
-            std.debug.print("  {: >8}: {}:\n", .{ i, handler });
+            try stdout.print("  {: >8}: {}:\n", .{ i, handler });
         }
     }
+    try stdout_buf.flush();
 }

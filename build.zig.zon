@@ -1,0 +1,10 @@
+.{
+    .name = "paradiso",
+    .version = "0.0.0",
+    .dependencies = .{
+        .binaryen = .{
+            .url = "https://github.com/ianprime0509/binaryen-zig/archive/28d52b2196667161d2b12e59f1d848b808020809.tar.gz",
+            .hash = "122040ff9c07a3a63de90a562ed7f32ccb8c04fdcb1bf53de0a07c42ec339554c870",
+        },
+    },
+}

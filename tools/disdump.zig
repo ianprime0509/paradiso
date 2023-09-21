@@ -41,7 +41,11 @@ pub fn main() !void {
             try stdout.print("  {X:0>8}: ", .{data_row_base});
             var data_words = std.mem.window(u8, row, 2, 2);
             while (data_words.next()) |word| {
-                try stdout.print("{X:0>2}", .{word[0]});
+                if (word.len > 0) {
+                    try stdout.print("{X:0>2}", .{word[0]});
+                } else {
+                    try stdout.print("  ", .{});
+                }
                 if (word.len > 1) {
                     try stdout.print("{X:0>2} ", .{word[1]});
                 } else {

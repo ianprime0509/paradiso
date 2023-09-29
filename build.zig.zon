@@ -1,0 +1,10 @@
+.{
+    .name = "paradiso",
+    .version = "0.0.0",
+    .dependencies = .{
+        .binaryen = .{
+            .url = "git+https://github.com/silversquirl/binaryen-zig#561f49894f91848eb5b87be4fc6d819b0700313f",
+            .hash = "122003c4eb2f58350fc815e914276d259ab8faecbb7d796215953fd2d6fb4a64d9b5",
+        },
+    },
+}

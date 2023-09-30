@@ -83,8 +83,11 @@ pub const Token = struct {
         keyword_continue,
         keyword_cyclic,
         keyword_do,
+        keyword_dynamic,
         keyword_else,
+        keyword_exception,
         keyword_exit,
+        keyword_fixed,
         keyword_fn,
         keyword_for,
         keyword_hd,
@@ -101,6 +104,8 @@ pub const Token = struct {
         keyword_of,
         keyword_or,
         keyword_pick,
+        keyword_raise,
+        keyword_raises,
         keyword_real,
         keyword_ref,
         keyword_return,
@@ -126,8 +131,11 @@ pub const Token = struct {
             .{ "continue", .keyword_continue },
             .{ "cyclic", .keyword_cyclic },
             .{ "do", .keyword_do },
+            .{ "dynamic", .keyword_dynamic },
             .{ "else", .keyword_else },
+            .{ "exception", .keyword_exception },
             .{ "exit", .keyword_exit },
+            .{ "fixed", .keyword_fixed },
             .{ "fn", .keyword_fn },
             .{ "for", .keyword_for },
             .{ "hd", .keyword_hd },
@@ -144,6 +152,8 @@ pub const Token = struct {
             .{ "of", .keyword_of },
             .{ "or", .keyword_or },
             .{ "pick", .keyword_pick },
+            .{ "raise", .keyword_raise },
+            .{ "raises", .keyword_raises },
             .{ "real", .keyword_real },
             .{ "ref", .keyword_ref },
             .{ "return", .keyword_return },
@@ -230,8 +240,11 @@ pub const Token = struct {
                 .keyword_continue => "continue",
                 .keyword_cyclic => "cyclic",
                 .keyword_do => "do",
+                .keyword_dynamic => "dynamic",
                 .keyword_else => "else",
+                .keyword_exception => "exception",
                 .keyword_exit => "exit",
+                .keyword_fixed => "fixed",
                 .keyword_fn => "fn",
                 .keyword_for => "for",
                 .keyword_hd => "hd",
@@ -248,6 +261,8 @@ pub const Token = struct {
                 .keyword_of => "of",
                 .keyword_or => "or",
                 .keyword_pick => "pick",
+                .keyword_raise => "raise",
+                .keyword_raises => "raises",
                 .keyword_real => "real",
                 .keyword_ref => "ref",
                 .keyword_return => "return",
@@ -755,9 +770,9 @@ test "keywords" {
         \\adt alt array
         \\big break byte
         \\case chan con continue cyclic
-        \\do
-        \\else exit
-        \\fn for
+        \\do dynamic
+        \\else exception exit
+        \\fixed fn for
         \\hd
         \\if implement import include int
         \\len list load
@@ -765,7 +780,7 @@ test "keywords" {
         \\nil
         \\of or
         \\pick
-        \\real ref return
+        \\raise raises real ref return
         \\self spawn string
         \\tagof tl to type
         \\while
@@ -783,8 +798,11 @@ test "keywords" {
             .keyword_continue,
             .keyword_cyclic,
             .keyword_do,
+            .keyword_dynamic,
             .keyword_else,
+            .keyword_exception,
             .keyword_exit,
+            .keyword_fixed,
             .keyword_fn,
             .keyword_for,
             .keyword_hd,
@@ -801,6 +819,8 @@ test "keywords" {
             .keyword_of,
             .keyword_or,
             .keyword_pick,
+            .keyword_raise,
+            .keyword_raises,
             .keyword_real,
             .keyword_ref,
             .keyword_return,

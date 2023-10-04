@@ -5,9 +5,18 @@ index: usize,
 
 const Tokenizer = @This();
 
+pub const ByteOffset = u32;
+
 pub const Token = struct {
     tag: Tag,
     span: Span,
+
+    pub const Index = enum(u32) { none = std.math.maxInt(u32), _ };
+
+    pub const List = std.MultiArrayList(struct {
+        tag: Tag,
+        start: ByteOffset,
+    });
 
     pub const Span = struct {
         start: usize,
@@ -736,35 +745,6 @@ pub fn next(tokenizer: *Tokenizer) Token {
     return token;
 }
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
-    if (args.len != 2) {
-        return error.InvalidArguments; // Usage: zig run Tokenizer.zig -- input
-    }
-
-    const input = try std.fs.cwd().readFileAlloc(allocator, args[1], std.math.maxInt(usize));
-    defer allocator.free(input);
-
-    var tokenizer = Tokenizer.init(input);
-    while (true) {
-        const token = tokenizer.next();
-        std.debug.print("{s: <24} {}\n", .{ token.tag.symbol(), token });
-        switch (token.tag) {
-            .invalid => {
-                std.process.exit(1);
-                break;
-            },
-            .eof => break,
-            else => {},
-        }
-    }
-}
-
 test "keywords" {
     try testTokenize(
         \\adt alt array
@@ -913,4 +893,33 @@ fn testTokenize(source: []const u8, expected_token_tags: []const Token.Tag) !voi
     try std.testing.expectEqual(Token.Tag.eof, last_token.tag);
     try std.testing.expectEqual(source.len, last_token.span.start);
     try std.testing.expectEqual(@as(usize, 0), last_token.span.len);
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+    if (args.len != 2) {
+        return error.InvalidArguments; // Usage: zig run Tokenizer.zig -- input
+    }
+
+    const input = try std.fs.cwd().readFileAlloc(allocator, args[1], std.math.maxInt(usize));
+    defer allocator.free(input);
+
+    var tokenizer = Tokenizer.init(input);
+    while (true) {
+        const token = tokenizer.next();
+        std.debug.print("{s: <24} {}\n", .{ token.tag.symbol(), token });
+        switch (token.tag) {
+            .invalid => {
+                std.process.exit(1);
+                break;
+            },
+            .eof => break,
+            else => {},
+        }
+    }
 }
